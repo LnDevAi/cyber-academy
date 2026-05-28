@@ -28,6 +28,7 @@ from app.schemas.payment import (
 )
 from app.services.payment.cinetpay import cinetpay_service
 from app.services.payment.stripe_service import stripe_service
+from app.tasks.payment_tasks import confirm_payment_and_provision
 
 logger = structlog.get_logger(__name__)
 
@@ -238,7 +239,6 @@ async def cinetpay_webhook(
         )
 
         # Trigger async provisioning
-        from app.tasks.payment_tasks import confirm_payment_and_provision
         confirm_payment_and_provision.delay(str(payment.id))
 
     else:
@@ -372,7 +372,6 @@ async def stripe_webhook(
             await db.flush()
 
             # Trigger provisioning
-            from app.tasks.payment_tasks import confirm_payment_and_provision
             confirm_payment_and_provision.delay(str(payment.id))
 
             logger.info(

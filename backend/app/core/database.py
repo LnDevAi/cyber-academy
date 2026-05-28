@@ -30,15 +30,18 @@ class Base(DeclarativeBase):
     metadata = metadata
 
 
-# Async engine
-async_engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_size=settings.DB_POOL_SIZE,
-    max_overflow=settings.DB_MAX_OVERFLOW,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-)
+# Async engine — SQLite (tests) doesn't support pool_size/max_overflow
+_is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+_engine_kwargs = dict(echo=settings.DEBUG)
+if not _is_sqlite:
+    _engine_kwargs.update(
+        pool_size=settings.DB_POOL_SIZE,
+        max_overflow=settings.DB_MAX_OVERFLOW,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+    )
+
+async_engine = create_async_engine(settings.DATABASE_URL, **_engine_kwargs)
 
 # Async session factory
 AsyncSessionLocal = async_sessionmaker(

@@ -3,8 +3,10 @@ import uuid
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, JSON, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID, JSONB
+
+_JSON = JSONB().with_variant(JSON(), "sqlite")
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -69,7 +71,7 @@ class Payment(Base):
     installment_total: Mapped[int] = mapped_column(Integer, default=1, nullable=False)   # total installments
     due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Provider webhook data
-    webhook_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    webhook_payload: Mapped[dict | None] = mapped_column(_JSON, nullable=True)
     # Payment URL (for redirect)
     payment_url: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     # Timestamps
