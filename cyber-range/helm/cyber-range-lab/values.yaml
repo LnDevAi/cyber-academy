@@ -1,0 +1,103 @@
+# =============================================================================
+# Cyber Academy E-DEFENCE — Cyber Range Helm Values
+# =============================================================================
+
+# Kubernetes namespace for the student lab
+namespace: "cyber-range-student"
+
+# Lab container image (Kali Linux rolling)
+labImage: "kalilinux/kali-rolling:latest"
+
+# Image pull policy
+imagePullPolicy: IfNotPresent
+
+# Student metadata (overridden per deployment)
+student:
+  id: "student-001"
+  username: "student"
+  labId: "lab-001"
+  courseCode: "cacp"
+
+# Resource allocation per lab pod
+resources:
+  limits:
+    cpu: "2"
+    memory: "4Gi"
+    ephemeral-storage: "10Gi"
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+    ephemeral-storage: "2Gi"
+
+# Guacamole connection settings
+guacamole:
+  protocol: "ssh"
+  port: 22
+  username: "student"
+  password: "cyberrange"
+  hostname: ""          # Injected at deploy time (pod IP or ClusterIP)
+  colorScheme: "gray-black"
+  fontSize: 14
+  enableSftp: false
+
+# SSH server settings inside the lab pod
+sshServer:
+  enabled: true
+  port: 22
+  image: "linuxserver/openssh-server:latest"
+  allowPasswordAuth: true
+
+# Network isolation policy
+networkPolicy:
+  enabled: true
+  # Deny all egress to the internet; students cannot exfiltrate or reach C2
+  allowEgressToInternet: false
+  # Allow inter-pod communication within the namespace for multi-container labs
+  allowIntraNamespace: true
+  # Allow egress to the guacd proxy so Guacamole can connect to the lab
+  allowGuacdEgress: true
+
+# Persistent volume for student workspace (scratch storage)
+persistence:
+  enabled: false
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 5Gi
+
+# Security context for the lab pod
+securityContext:
+  runAsNonRoot: false        # Some Kali tools require root
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - NET_ADMIN
+      - SYS_TIME
+    add: []
+
+# Lab lifecycle
+lifespan:
+  enabled: true
+  # Maximum duration (seconds) before automatic teardown
+  maxDurationSeconds: 7200    # 2 hours
+  # Warning notification N seconds before teardown
+  warningBeforeSeconds: 300
+
+# Node selector (optionally isolate labs on dedicated nodes)
+nodeSelector: {}
+#  edefence.tech/role: cyber-range
+
+tolerations: []
+
+affinity: {}
+
+# Extra environment variables injected into the lab pod
+extraEnv: []
+#  - name: CTF_FLAG
+#    value: "EDEFENCE{changeme}"
+
+# Labels applied to all resources in this chart
+commonLabels:
+  app.kubernetes.io/part-of: cyber-academy
+  edefence.tech/component: cyber-range
+  edefence.tech/managed-by: helm

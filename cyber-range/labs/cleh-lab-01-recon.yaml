@@ -1,0 +1,204 @@
+# =============================================================================
+# Cyber Academy E-DEFENCE — Lab Definition
+# Certification: CLEH — Certified Lead Ethical Hacker UEMOA
+# Lab ID: cleh-lab-01-recon
+# =============================================================================
+
+apiVersion: edefence.tech/v1
+kind: CyberLab
+metadata:
+  name: cleh-lab-01-recon
+  namespace: cyber-range-labs
+  labels:
+    edefence.tech/certification: cleh
+    edefence.tech/lab-number: "01"
+    edefence.tech/difficulty: beginner
+    edefence.tech/type: offensive-recon
+
+spec:
+  # ---------------------------------------------------------------------------
+  # Lab metadata
+  # ---------------------------------------------------------------------------
+  title: "Reconnaissance réseau — Cartographie d'infrastructure PME UEMOA"
+  titleFr: "Reconnaissance réseau — PME UEMOA"
+  description: >
+    Réaliser une phase de reconnaissance complète sur l'infrastructure simulée
+    d'une PME fictive de la zone UEMOA (PME-UEMOA-Lab). L'étudiant effectuera
+    une reconnaissance passive (OSINT, WHOIS, Shodan simulé) puis une
+    reconnaissance active (Nmap, Masscan, énumération de services) pour
+    cartographier l'infrastructure cible et identifier les surfaces d'attaque
+    avant un test d'intrusion.
+  duration: 90
+  maxAttempts: 3
+  passingScore: 65
+
+  # ---------------------------------------------------------------------------
+  # Docker image
+  # ---------------------------------------------------------------------------
+  image:
+    repository: edefence/cleh-recon-lab
+    tag: "1.0.0"
+    fallback: "kalilinux/kali-rolling:latest"
+    pullPolicy: IfNotPresent
+
+  # ---------------------------------------------------------------------------
+  # Pre-installed tools
+  # ---------------------------------------------------------------------------
+  tools:
+    - name: Nmap
+      version: "7.94"
+      install: apt
+    - name: Masscan
+      version: "1.3"
+      install: apt
+    - name: theHarvester
+      version: latest
+      install: pip
+    - name: Recon-ng
+      version: latest
+      install: apt
+    - name: Amass
+      version: "v3.23"
+      install: apt
+    - name: Gobuster
+      version: latest
+      install: apt
+    - name: Nikto
+      version: "2.1"
+      install: apt
+    - name: enum4linux
+      version: latest
+      install: apt
+    - name: smbclient
+      version: latest
+      install: apt
+
+  # ---------------------------------------------------------------------------
+  # Learning objectives
+  # ---------------------------------------------------------------------------
+  objectives:
+    - id: obj-01
+      title: "Reconnaissance passive — OSINT et empreinte numérique"
+      description: >
+        Collecter des informations sur PME-UEMOA-Lab sans interaction directe :
+        informations WHOIS simulées, certificats SSL, technologies web (Wappalyzer),
+        employés mentionnés dans les métadonnées de documents.
+      points: 20
+
+    - id: obj-02
+      title: "Découverte d'hôtes et cartographie réseau"
+      description: >
+        Identifier tous les hôtes actifs du réseau cible (10.20.4.0/24) avec
+        Nmap (ping sweep, ARP scan). Dresser la carte topologique du réseau.
+      points: 20
+
+    - id: obj-03
+      title: "Scan de ports et identification des services"
+      description: >
+        Effectuer un scan Nmap complet (SYN scan, version detection, OS detection)
+        sur les hôtes découverts. Identifier tous les services exposés, versions
+        et potentielles CVE associées (via Nmap NSE scripts).
+      points: 30
+
+    - id: obj-04
+      title: "Énumération des services (SMB, HTTP, FTP)"
+      description: >
+        Approfondir l'analyse de chaque service : partages SMB accessibles,
+        répertoires web cachés (Gobuster), bannières FTP, certificats SSL expirés.
+        Documenter chaque vecteur d'attaque potentiel découvert.
+      points: 30
+
+  # ---------------------------------------------------------------------------
+  # CTF Flags
+  # ---------------------------------------------------------------------------
+  flags:
+    - id: flag-01
+      hint: "Combien d'hôtes actifs dans le réseau cible ?"
+      flag: "EDEFENCE{active_hosts_count_7}"
+      points: 10
+
+    - id: flag-02
+      hint: "Quel service tourne sur le port 8443 ?"
+      flag: "EDEFENCE{service_port_8443_tomcat_9}"
+      points: 15
+
+    - id: flag-03
+      hint: "Nom du partage SMB accessible anonymement"
+      flag: "EDEFENCE{smb_share_anonymous_PARTAGE_PUBLIC}"
+      points: 15
+
+    - id: flag-04
+      hint: "CVE associée à la version d'Apache trouvée"
+      flag: "EDEFENCE{cve_apache_CVE-2021-41773}"
+      points: 20
+
+    - id: flag-05
+      hint: "Fichier caché trouvé par Gobuster sur le serveur web"
+      flag: "EDEFENCE{gobuster_found_backup_sql_gz}"
+      points: 20
+
+  # ---------------------------------------------------------------------------
+  # Target infrastructure (PME-UEMOA-Lab)
+  # ---------------------------------------------------------------------------
+  targets:
+    - name: "web-server-pme"
+      image: "edefence/pme-web-server:1.0.0"
+      ip: "10.20.4.10"
+      services:
+        - port: 80
+          service: http
+          version: "Apache/2.4.49"
+        - port: 443
+          service: https
+          version: "Apache/2.4.49"
+        - port: 8443
+          service: https
+          version: "Apache Tomcat 9.0.52"
+
+    - name: "file-server-pme"
+      image: "edefence/pme-file-server:1.0.0"
+      ip: "10.20.4.11"
+      services:
+        - port: 21
+          service: ftp
+          version: "vsftpd 3.0.3"
+        - port: 445
+          service: smb
+          version: "Samba 4.13"
+
+    - name: "db-server-pme"
+      image: "edefence/pme-db-server:1.0.0"
+      ip: "10.20.4.12"
+      services:
+        - port: 3306
+          service: mysql
+          version: "MySQL 5.7.36"
+
+  # ---------------------------------------------------------------------------
+  # Network configuration
+  # ---------------------------------------------------------------------------
+  network:
+    isolated: true
+    allowInternetEgress: false
+    internalSubnet: "10.20.4.0/24"
+    attackerIp: "10.20.4.100"
+
+  # ---------------------------------------------------------------------------
+  # Resources
+  # ---------------------------------------------------------------------------
+  resources:
+    limits:
+      cpu: "2"
+      memory: "3Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+  # ---------------------------------------------------------------------------
+  # Guacamole access
+  # ---------------------------------------------------------------------------
+  access:
+    protocol: ssh
+    port: 22
+    guiProtocol: vnc
+    vncPort: 5900

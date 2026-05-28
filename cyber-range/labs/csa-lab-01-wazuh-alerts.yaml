@@ -1,0 +1,153 @@
+# =============================================================================
+# Cyber Academy E-DEFENCE — Lab Definition
+# Certification: CSA — Cyber Security Analyst (SOC)
+# Lab ID: csa-lab-01-wazuh-alerts
+# =============================================================================
+
+apiVersion: edefence.tech/v1
+kind: CyberLab
+metadata:
+  name: csa-lab-01-wazuh-alerts
+  namespace: cyber-range-labs
+  labels:
+    edefence.tech/certification: csa
+    edefence.tech/lab-number: "01"
+    edefence.tech/difficulty: intermediate
+    edefence.tech/type: defensive-soc
+
+spec:
+  # ---------------------------------------------------------------------------
+  # Lab metadata
+  # ---------------------------------------------------------------------------
+  title: "Qualification d'alertes Wazuh SOC — Tri et investigation d'incidents"
+  titleFr: "Qualification d'alertes Wazuh SOC"
+  description: >
+    Analyser un flux d'alertes Wazuh préchargées correspondant à une journée
+    d'activité d'un SOC fictif au Burkina Faso. L'étudiant doit qualifier
+    chaque alerte (vrai positif / faux positif), investiguer les incidents
+    prioritaires, corréler les événements et produire un rapport d'incident
+    conforme à la méthodologie NIST SP 800-61.
+  duration: 150     # minutes
+  maxAttempts: 2
+  passingScore: 75
+
+  # ---------------------------------------------------------------------------
+  # Docker image
+  # ---------------------------------------------------------------------------
+  image:
+    repository: edefence/csa-wazuh-lab
+    tag: "1.0.0"
+    fallback: "ubuntu:22.04"
+    pullPolicy: IfNotPresent
+
+  # ---------------------------------------------------------------------------
+  # Pre-installed tools / services
+  # ---------------------------------------------------------------------------
+  tools:
+    - name: Wazuh Manager
+      version: "4.7"
+      install: compose
+    - name: Kibana / OpenSearch Dashboards
+      version: "2.10"
+      install: compose
+    - name: TheHive
+      version: "5.x"
+      install: compose
+    - name: Cortex
+      version: "3.x"
+      install: compose
+    - name: MISP
+      version: "2.4"
+      install: compose
+
+  # ---------------------------------------------------------------------------
+  # Learning objectives
+  # ---------------------------------------------------------------------------
+  objectives:
+    - id: obj-01
+      title: "Identifier et qualifier les alertes critiques"
+      description: >
+        Analyser le tableau de bord Wazuh, filtrer les alertes de niveau
+        CRITICAL et HIGH, distinguer les vrais positifs des faux positifs
+        sur la base des règles MITRE ATT&CK associées.
+      points: 25
+
+    - id: obj-02
+      title: "Investiguer un incident de compromission de compte"
+      description: >
+        Tracer le parcours d'un attaquant ayant compromis un compte admin
+        via brute-force SSH (alerte Wazuh rule 5763), identifier l'IP source,
+        la timeline et les commandes exécutées.
+      points: 25
+
+    - id: obj-03
+      title: "Corréler des événements multi-sources"
+      description: >
+        Croiser les logs Wazuh (syslog, auditd, FIM) pour reconstruire la
+        kill chain complète et mapper sur le framework MITRE ATT&CK.
+      points: 25
+
+    - id: obj-04
+      title: "Rédiger un rapport d'incident NIST SP 800-61"
+      description: >
+        Produire un rapport structuré couvrant : détection, confinement,
+        éradication, recouvrement et leçons apprises, avec indicateurs
+        de compromission (IOC) documentés.
+      points: 25
+
+  # ---------------------------------------------------------------------------
+  # CTF Flags
+  # ---------------------------------------------------------------------------
+  flags:
+    - id: flag-01
+      hint: "Trouvez l'IP de l'attaquant dans les logs Wazuh"
+      flag: "EDEFENCE{attacker_ip_192_168_50_42}"
+      points: 15
+
+    - id: flag-02
+      hint: "Identifiez le compte compromis (nom d'utilisateur)"
+      flag: "EDEFENCE{compromised_user_sysadmin_bf}"
+      points: 15
+
+    - id: flag-03
+      hint: "Quel fichier a été modifié (FIM alert) — chemin complet"
+      flag: "EDEFENCE{fim_alert_etc_passwd_modified}"
+      points: 20
+
+  # ---------------------------------------------------------------------------
+  # Network configuration
+  # ---------------------------------------------------------------------------
+  network:
+    isolated: true
+    allowInternetEgress: false
+    internalSubnet: "10.20.2.0/24"
+    services:
+      - name: wazuh-manager
+        image: "wazuh/wazuh-manager:4.7.0"
+        ip: "10.20.2.10"
+      - name: opensearch
+        image: "opensearchproject/opensearch:2.10.0"
+        ip: "10.20.2.11"
+      - name: opensearch-dashboards
+        image: "opensearchproject/opensearch-dashboards:2.10.0"
+        ip: "10.20.2.12"
+
+  # ---------------------------------------------------------------------------
+  # Resources
+  # ---------------------------------------------------------------------------
+  resources:
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+    requests:
+      cpu: "1"
+      memory: "4Gi"
+
+  # ---------------------------------------------------------------------------
+  # Guacamole access
+  # ---------------------------------------------------------------------------
+  access:
+    protocol: ssh
+    port: 22
+    guiProtocol: vnc
+    vncPort: 5900

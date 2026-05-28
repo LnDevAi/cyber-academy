@@ -1,0 +1,23 @@
+apiVersion: v2
+name: cyber-range-lab
+description: E-DEFENCE Cyber Range Lab — Kubernetes chart for isolated student lab environments
+version: 1.0.0
+appVersion: "1.0.0"
+type: application
+
+keywords:
+  - cybersecurity
+  - cyber-range
+  - ctf
+  - lab
+  - guacamole
+  - kali
+
+maintainers:
+  - name: E-DEFENCE DevOps
+    email: tech@edefence.tech
+    url: https://edefence.tech
+
+annotations:
+  category: Security
+  licenses: MIT

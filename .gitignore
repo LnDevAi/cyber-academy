@@ -1,0 +1,262 @@
+# =============================================================================
+# Cyber Academy E-DEFENCE — .gitignore
+# Python + Flutter/Dart + Docker + Kubernetes
+# =============================================================================
+
+# =============================================================================
+# SECURITY — NEVER COMMIT THESE
+# =============================================================================
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+kubeconfig
+.kube/
+*_rsa
+*_rsa.pub
+*_ed25519
+*_ed25519.pub
+secrets/
+secret.yaml
+secrets.yaml
+vault-token
+
+# =============================================================================
+# Python / FastAPI / Backend
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+.python-version
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+.conda/
+.virtualenv/
+
+# Testing & coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+nosetests.xml
+test-results.xml
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb
+
+# pyinstaller
+*.manifest
+*.spec
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Alembic
+alembic/versions/__pycache__/
+
+# =============================================================================
+# Flutter / Dart / Frontend
+# =============================================================================
+# Build outputs
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# Flutter web build artifacts
+web/
+*.js.map
+
+# Dart generated files
+*.g.dart
+*.freezed.dart
+*.gr.dart
+
+# Flutter test coverage
+coverage/
+
+# Android
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+
+# iOS
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/profile
+**/ios/**/xcuserdata
+**/ios/.generated/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral/
+
+# Windows
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+**/windows/flutter/generated_plugins.cmake
+
+# Linux
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+**/linux/flutter/generated_plugins.cmake
+
+# =============================================================================
+# Docker
+# =============================================================================
+docker-compose.override.yml
+.dockerignore-local
+
+# Docker volumes (if accidentally bind-mounted)
+postgres_data/
+redis_data/
+minio_data/
+moodle_data/
+uploads_data/
+chromadb_data/
+guacd_drive/
+guacd_record/
+
+# =============================================================================
+# Kubernetes / Helm
+# =============================================================================
+# Rendered Helm templates (generated)
+cyber-range/helm/*/charts/
+cyber-range/helm/*/Chart.lock
+*.helmignore.local
+
+# k3s data
+/var/lib/rancher/
+
+# =============================================================================
+# Node.js (if any tooling)
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+
+# =============================================================================
+# IDEs and editors
+# =============================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# JetBrains
+*.iml
+*.ipr
+*.iws
+.idea/
+out/
+
+# =============================================================================
+# Logs and databases
+# =============================================================================
+*.log
+*.sqlite
+*.sqlite3
+*.db
+logs/
+log/
+
+# =============================================================================
+# OS
+# =============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# =============================================================================
+# Misc
+# =============================================================================
+*.bak
+*.tmp
+*.temp
+*.orig
+.cache/
+tmp/
+temp/

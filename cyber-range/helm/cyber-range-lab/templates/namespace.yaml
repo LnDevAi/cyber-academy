@@ -1,0 +1,22 @@
+{{/*
+  Namespace for the Cyber Range student lab.
+  Each lab session is isolated in its own namespace.
+*/}}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}
+  labels:
+    edefence.tech/type: cyber-range
+    edefence.tech/student-id: {{ .Values.student.id | quote }}
+    edefence.tech/lab-id: {{ .Values.student.labId | quote }}
+    edefence.tech/course-code: {{ .Values.student.courseCode | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: cyber-academy
+    {{- with .Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    edefence.tech/created-at: {{ now | date "2006-01-02T15:04:05Z" | quote }}
+    edefence.tech/lab-image: {{ .Values.labImage | quote }}
+    edefence.tech/max-duration: {{ .Values.lifespan.maxDurationSeconds | quote }}

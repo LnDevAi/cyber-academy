@@ -1,0 +1,215 @@
+# =============================================================================
+# Cyber Academy E-DEFENCE — Lab Definition
+# Certification: CDFIR — Cyber Defence & Forensics Incident Response
+# Lab ID: cdfir-lab-01-ransomware
+# =============================================================================
+
+apiVersion: edefence.tech/v1
+kind: CyberLab
+metadata:
+  name: cdfir-lab-01-ransomware
+  namespace: cyber-range-labs
+  labels:
+    edefence.tech/certification: cdfir
+    edefence.tech/lab-number: "01"
+    edefence.tech/difficulty: advanced
+    edefence.tech/type: forensics-incident-response
+
+spec:
+  # ---------------------------------------------------------------------------
+  # Lab metadata
+  # ---------------------------------------------------------------------------
+  title: "Investigation ransomware — Cas PME burkinabè post-incident"
+  titleFr: "Investigation ransomware — cas PME burkinabè"
+  description: >
+    Mener une investigation forensique complète sur un système Windows Server
+    2019 d'une PME fictive du Burkina Faso (BurkinaSoft SARL) victime d'une
+    attaque ransomware (variante LockBit simulée). L'étudiant analysera les
+    artefacts forensiques (logs Windows, MFT, registre, mémoire RAM) pour
+    reconstruire la kill chain, identifier le patient zéro, déterminer
+    l'étendue de la compromission et produire un rapport DFIR complet.
+  duration: 180     # 3 hours
+  maxAttempts: 2
+  passingScore: 75
+
+  # ---------------------------------------------------------------------------
+  # Docker image
+  # ---------------------------------------------------------------------------
+  image:
+    repository: edefence/cdfir-ransomware-lab
+    tag: "1.0.0"
+    fallback: "ubuntu:22.04"
+    pullPolicy: IfNotPresent
+
+  # ---------------------------------------------------------------------------
+  # Pre-installed tools (DFIR workstation)
+  # ---------------------------------------------------------------------------
+  tools:
+    - name: Volatility3
+      version: "2.5.0"
+      install: pip
+    - name: Autopsy
+      version: "4.21"
+      install: manual
+    - name: Eric Zimmerman Tools (Windows)
+      version: latest
+      install: bundled
+      tools:
+        - MFTECmd
+        - PECmd
+        - RECmd
+        - AppCompatCacheParser
+        - Chainsaw
+    - name: KAPE (Kroll Artifact Parser)
+      version: latest
+      install: bundled
+    - name: CyberChef
+      version: latest
+      install: web
+    - name: YARA
+      version: "4.3"
+      install: apt
+    - name: strings
+      version: latest
+      install: apt
+    - name: file / binwalk
+      version: latest
+      install: apt
+    - name: Wireshark
+      version: latest
+      install: apt
+
+  # ---------------------------------------------------------------------------
+  # Forensic artifacts provided
+  # ---------------------------------------------------------------------------
+  artifacts:
+    - name: Windows Event Logs
+      path: /evidence/evtx/
+      description: "Security, System, Application logs (72h pre/post incident)"
+      format: EVTX
+
+    - name: MFT (Master File Table)
+      path: /evidence/mft/$MFT
+      description: "Snapshot du MFT post-chiffrement"
+      format: RAW
+
+    - name: Registry Hives
+      path: /evidence/registry/
+      description: "SYSTEM, SOFTWARE, NTUSER.DAT des comptes concernés"
+      format: REG
+
+    - name: Memory Dump
+      path: /evidence/memory/WIN-SERVER-2019.raw
+      description: "Dump RAM 8GB au moment de l'infection active"
+      format: RAW
+
+    - name: Network Capture
+      path: /evidence/pcap/incident_capture.pcapng
+      description: "Capture réseau 6h autour de l'incident"
+      format: PCAPNG
+
+    - name: Ransomware Sample (deactivated)
+      path: /evidence/malware/lockbit_sim.exe.inactive
+      description: "Échantillon ransomware simulé — signature désactivée"
+      format: PE32
+
+  # ---------------------------------------------------------------------------
+  # Learning objectives
+  # ---------------------------------------------------------------------------
+  objectives:
+    - id: obj-01
+      title: "Établir la timeline de l'incident"
+      description: >
+        Analyser les logs Windows (Event ID 4624, 4625, 4688, 4698, 7045)
+        et le MFT pour reconstruire la chronologie précise de l'attaque :
+        premier accès, persistance, mouvement latéral, exécution du ransomware.
+      points: 25
+
+    - id: obj-02
+      title: "Identifier le vecteur d'intrusion initial"
+      description: >
+        Déterminer comment l'attaquant a pénétré le système (phishing ? RDP
+        exposé ? VPN vulnérable ?). Identifier le compte compromis (patient zéro),
+        l'IP source et l'heure exacte du premier accès.
+      points: 25
+
+    - id: obj-03
+      title: "Analyser le ransomware avec Volatility et YARA"
+      description: >
+        Extraire le processus malveillant du dump mémoire, analyser ses strings
+        et imports, créer une règle YARA pour cette variante, déterminer
+        l'algorithme de chiffrement utilisé et les extensions ciblées.
+      points: 25
+
+    - id: obj-04
+      title: "Produire un rapport DFIR complet"
+      description: >
+        Rédiger un rapport d'investigation professionnel conforme aux standards
+        (NIST SP 800-86, ISO/IEC 27037) : executive summary, timeline, IOC,
+        étendue des données compromises, recommandations de recouvrement
+        et mesures correctives pour BurkinaSoft SARL.
+      points: 25
+
+  # ---------------------------------------------------------------------------
+  # CTF Flags
+  # ---------------------------------------------------------------------------
+  flags:
+    - id: flag-01
+      hint: "ID de l'événement Windows marquant le premier accès RDP réussi"
+      flag: "EDEFENCE{first_rdp_event_4624_logon_type_10}"
+      points: 15
+
+    - id: flag-02
+      hint: "Nom du compte compromis (patient zéro)"
+      flag: "EDEFENCE{patient_zero_account_support_bf}"
+      points: 15
+
+    - id: flag-03
+      hint: "Heure UTC exacte du début du chiffrement (format ISO)"
+      flag: "EDEFENCE{encryption_start_2026-03-15T02:17:43Z}"
+      points: 20
+
+    - id: flag-04
+      hint: "Nom du service malveillant créé pour persistance (Event 7045)"
+      flag: "EDEFENCE{malicious_service_WindowsUpdateSvc32}"
+      points: 15
+
+    - id: flag-05
+      hint: "Extension ajoutée aux fichiers chiffrés"
+      flag: "EDEFENCE{encrypted_extension_.edeflock}"
+      points: 15
+
+    - id: flag-06
+      hint: "Clé de registre Run utilisée pour l'auto-démarrage"
+      flag: "EDEFENCE{run_key_HKCU_Software_Microsoft_Windows_CurrentVersion_Run_WinHelper32}"
+      points: 20
+
+  # ---------------------------------------------------------------------------
+  # Network configuration
+  # ---------------------------------------------------------------------------
+  network:
+    isolated: true
+    allowInternetEgress: false
+    internalSubnet: "10.20.5.0/24"
+
+  # ---------------------------------------------------------------------------
+  # Resources (memory-intensive for Volatility)
+  # ---------------------------------------------------------------------------
+  resources:
+    limits:
+      cpu: "4"
+      memory: "12Gi"
+      ephemeral-storage: "30Gi"
+    requests:
+      cpu: "2"
+      memory: "8Gi"
+      ephemeral-storage: "20Gi"
+
+  # ---------------------------------------------------------------------------
+  # Guacamole access
+  # ---------------------------------------------------------------------------
+  access:
+    protocol: ssh
+    port: 22
+    guiProtocol: vnc
+    vncPort: 5900

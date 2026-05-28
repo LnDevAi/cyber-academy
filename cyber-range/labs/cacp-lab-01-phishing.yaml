@@ -1,0 +1,145 @@
+# =============================================================================
+# Cyber Academy E-DEFENCE — Lab Definition
+# Certification: CACP — Cyber Analyste Certifié Phishing
+# Lab ID: cacp-lab-01-phishing
+# =============================================================================
+
+apiVersion: edefence.tech/v1
+kind: CyberLab
+metadata:
+  name: cacp-lab-01-phishing
+  namespace: cyber-range-labs
+  labels:
+    edefence.tech/certification: cacp
+    edefence.tech/lab-number: "01"
+    edefence.tech/difficulty: intermediate
+    edefence.tech/type: offensive-simulation
+
+spec:
+  # ---------------------------------------------------------------------------
+  # Lab metadata
+  # ---------------------------------------------------------------------------
+  title: "Phishing Simulator UEMOA — Campagne d'hameçonnage ciblée"
+  titleFr: "Simulateur de Phishing UEMOA"
+  description: >
+    Concevoir et déployer une campagne de phishing ciblée simulant une attaque
+    sur une institution financière fictive de la zone UEMOA. Les étudiants
+    utilisent GoPhish pour créer des e-mails d'hameçonnage, héberger des pages
+    de collecte et analyser les taux de clic — dans un environnement 100%
+    isolé du réseau public.
+  duration: 120     # minutes
+  maxAttempts: 3
+  passingScore: 70  # percent
+
+  # ---------------------------------------------------------------------------
+  # Docker image for the lab environment
+  # ---------------------------------------------------------------------------
+  image:
+    repository: edefence/cacp-phishing-lab
+    tag: "1.0.0"
+    fallback: "kalilinux/kali-rolling:latest"
+    pullPolicy: IfNotPresent
+
+  # ---------------------------------------------------------------------------
+  # Pre-installed tools
+  # ---------------------------------------------------------------------------
+  tools:
+    - name: GoPhish
+      version: "0.12.1"
+      install: apt
+    - name: SET (Social Engineering Toolkit)
+      version: latest
+      install: apt
+    - name: Postfix
+      version: latest
+      install: apt
+    - name: Python3 + smtplib
+      version: "3.11"
+      install: bundled
+    - name: Wireshark
+      version: latest
+      install: apt
+
+  # ---------------------------------------------------------------------------
+  # Learning objectives
+  # ---------------------------------------------------------------------------
+  objectives:
+    - id: obj-01
+      title: "Comprendre l'anatomie d'une attaque phishing"
+      description: >
+        Identifier les composants d'une campagne phishing réussie :
+        prétexte crédible, domaine typosquatté, page clone, infrastructure SMTP.
+      points: 20
+
+    - id: obj-02
+      title: "Configurer GoPhish et créer un template e-mail UEMOA"
+      description: >
+        Mettre en place GoPhish, créer un template imitant un e-mail de la
+        BCEAO ou d'une banque UEMOA fictive, configurer le profil d'envoi SMTP.
+      points: 25
+
+    - id: obj-03
+      title: "Héberger une page de collecte de credentials"
+      description: >
+        Cloner une page de connexion bancaire fictive (HTML/CSS), l'héberger
+        localement avec GoPhish, configurer la redirection post-soumission.
+      points: 25
+
+    - id: obj-04
+      title: "Analyser les résultats et produire un rapport de campagne"
+      description: >
+        Interpréter les statistiques GoPhish (taux d'ouverture, clic, soumission),
+        identifier les facteurs de réussite et rédiger des recommandations
+        de sensibilisation pour l'institution cible.
+      points: 30
+
+  # ---------------------------------------------------------------------------
+  # CTF Flags (capture-the-flag validation)
+  # ---------------------------------------------------------------------------
+  flags:
+    - id: flag-01
+      hint: "Configurez GoPhish et accédez au dashboard"
+      flag: "EDEFENCE{gophish_configured_uemoa}"
+      points: 10
+
+    - id: flag-02
+      hint: "Soumettez des credentials sur votre page de phishing"
+      flag: "EDEFENCE{phish_success_bceao_clone}"
+      points: 15
+
+    - id: flag-03
+      hint: "Exportez le rapport JSON de la campagne"
+      flag: "EDEFENCE{campaign_report_exported}"
+      points: 20
+
+  # ---------------------------------------------------------------------------
+  # Network configuration (isolated)
+  # ---------------------------------------------------------------------------
+  network:
+    isolated: true
+    allowInternetEgress: false
+    internalSubnet: "10.20.1.0/24"
+    targetHost:
+      name: "victim-mail-server"
+      image: "mailhog/mailhog:latest"
+      ip: "10.20.1.10"
+
+  # ---------------------------------------------------------------------------
+  # Resources
+  # ---------------------------------------------------------------------------
+  resources:
+    limits:
+      cpu: "2"
+      memory: "3Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+  # ---------------------------------------------------------------------------
+  # Guacamole access
+  # ---------------------------------------------------------------------------
+  access:
+    protocol: ssh
+    port: 22
+    guiProtocol: vnc     # VNC for GoPhish web UI access via Guacamole
+    vncPort: 5900

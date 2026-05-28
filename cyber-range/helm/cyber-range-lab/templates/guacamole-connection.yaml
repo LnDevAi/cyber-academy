@@ -1,0 +1,59 @@
+{{/*
+  ConfigMap — Guacamole connection parameters for this lab session.
+  The FastAPI backend reads this ConfigMap (via k8s API) to register
+  the connection in Guacamole via the REST API when the lab starts.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lab-{{ .Values.student.id }}-{{ .Values.student.labId }}-guac-conn
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: cyber-range-lab
+    edefence.tech/type: guacamole-connection
+    edefence.tech/student-id: {{ .Values.student.id | quote }}
+    edefence.tech/lab-id: {{ .Values.student.labId | quote }}
+    edefence.tech/course-code: {{ .Values.student.courseCode | quote }}
+    {{- with .Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+data:
+  # Guacamole protocol to use for this lab
+  protocol: {{ .Values.guacamole.protocol | quote }}
+
+  # Target port inside the lab pod
+  port: {{ .Values.guacamole.port | quote }}
+
+  # Credentials for the lab environment
+  username: {{ .Values.guacamole.username | quote }}
+  password: {{ .Values.guacamole.password | quote }}
+
+  # Service hostname (ClusterIP service name within the namespace)
+  hostname: "lab-{{ .Values.student.id }}-{{ .Values.student.labId }}-svc.{{ .Values.namespace }}.svc.cluster.local"
+
+  # Guacamole display settings
+  color-scheme: {{ .Values.guacamole.colorScheme | quote }}
+  font-size: {{ .Values.guacamole.fontSize | quote }}
+
+  # Lab metadata passed to the Guacamole connection name
+  connection-name: "{{ .Values.student.courseCode | upper }}-{{ .Values.student.labId }}-{{ .Values.student.username }}"
+
+  # JSON blob for Guacamole REST API connection creation (consumed by seed job)
+  guacamole-connection.json: |
+    {
+      "name": "{{ .Values.student.courseCode | upper }}-{{ .Values.student.labId }}-{{ .Values.student.username }}",
+      "protocol": "{{ .Values.guacamole.protocol }}",
+      "parameters": {
+        "hostname": "lab-{{ .Values.student.id }}-{{ .Values.student.labId }}-svc.{{ .Values.namespace }}.svc.cluster.local",
+        "port": "{{ .Values.guacamole.port }}",
+        "username": "{{ .Values.guacamole.username }}",
+        "password": "{{ .Values.guacamole.password }}",
+        "color-scheme": "{{ .Values.guacamole.colorScheme }}",
+        "font-size": "{{ .Values.guacamole.fontSize }}",
+        "enable-sftp": "{{ .Values.guacamole.enableSftp }}"
+      },
+      "attributes": {
+        "max-connections": "1",
+        "max-connections-per-user": "1"
+      }
+    }

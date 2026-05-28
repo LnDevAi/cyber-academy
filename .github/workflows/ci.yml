@@ -1,0 +1,221 @@
+# =============================================================================
+# Cyber Academy E-DEFENCE — Continuous Integration
+# Runs on every push and pull request (main, dev, feature/*)
+# Two jobs in parallel: backend (Python) + frontend (Flutter)
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - "feature/**"
+      - "fix/**"
+  pull_request:
+    branches:
+      - main
+      - dev
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ===========================================================================
+  # Backend — FastAPI / Python
+  # ===========================================================================
+  backend:
+    name: "Backend (Python ${{ matrix.python-version }})"
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cyberacademy
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: cyberacademy_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    env:
+      DEBUG: "true"
+      SECRET_KEY: "ci-test-secret-key-64-chars-minimum-for-testing-purposes-only"
+      ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      DB_PASSWORD: "testpassword"
+      DATABASE_URL: "postgresql+asyncpg://cyberacademy:testpassword@localhost:5432/cyberacademy_test"
+      DATABASE_SYNC_URL: "postgresql://cyberacademy:testpassword@localhost:5432/cyberacademy_test"
+      REDIS_PASSWORD: ""
+      REDIS_URL: "redis://localhost:6379/0"
+      MINIO_ENDPOINT: "localhost:9000"
+      MINIO_ACCESS_KEY: "minioadmin"
+      MINIO_SECRET_KEY: "minioadmin"
+      MINIO_BUCKET: "cyberacademy-test"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Lint with Ruff
+        run: |
+          pip install ruff
+          ruff check . --output-format=github
+
+      - name: Type check with mypy
+        run: |
+          pip install mypy
+          mypy app/ \
+            --ignore-missing-imports \
+            --no-strict-optional \
+            --warn-redundant-casts \
+            --warn-unused-ignores \
+            || echo "mypy warnings (non-blocking)"
+
+      - name: Run Alembic migrations (test DB)
+        run: |
+          alembic upgrade head
+
+      - name: Run tests with pytest
+        run: |
+          pytest tests/ \
+            -v \
+            --tb=short \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            -x \
+            --asyncio-mode=auto \
+            --timeout=120
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: matrix.python-version == '3.11'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./backend/coverage.xml
+          flags: backend
+          name: backend-py${{ matrix.python-version }}
+          fail_ci_if_error: false
+
+  # ===========================================================================
+  # Frontend — Flutter Web
+  # ===========================================================================
+  frontend:
+    name: "Frontend (Flutter Web)"
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter (stable)
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: stable
+          channel: stable
+          cache: true
+
+      - name: Verify Flutter installation
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify pubspec lock is up to date
+        run: |
+          flutter pub get --no-example
+          git diff --exit-code pubspec.lock || (echo "pubspec.lock is out of date. Run flutter pub get and commit." && exit 1)
+
+      - name: Analyze code (flutter analyze)
+        run: |
+          flutter analyze \
+            --no-fatal-infos \
+            --suppress-analytics
+
+      - name: Run unit & widget tests
+        run: |
+          flutter test \
+            --coverage \
+            --reporter=github
+
+      - name: Upload Flutter coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-flutter
+          fail_ci_if_error: false
+
+      - name: Build Flutter Web (--release, CanvasKit)
+        run: |
+          flutter build web \
+            --release \
+            --web-renderer canvaskit \
+            --dart-define=FLUTTER_WEB_CANVASKIT_URL=https://unpkg.com/canvaskit-wasm@latest/bin/
+
+      - name: Verify build output
+        run: |
+          if [[ ! -f build/web/index.html ]]; then
+            echo "ERROR: Flutter web build failed — index.html not found"
+            exit 1
+          fi
+          if [[ ! -f build/web/main.dart.js ]]; then
+            echo "ERROR: Flutter web build failed — main.dart.js not found"
+            exit 1
+          fi
+          BUILD_SIZE=$(du -sh build/web | cut -f1)
+          echo "Flutter Web build size: $BUILD_SIZE"
+          ls -la build/web/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-web-build
+          path: frontend/build/web/
+          retention-days: 7

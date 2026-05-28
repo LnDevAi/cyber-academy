@@ -1,0 +1,101 @@
+{{/*
+  NetworkPolicy — strictly isolates the student lab pod:
+    - Denies ALL egress to the internet
+    - Allows ingress ONLY from guacd (Guacamole daemon)
+    - Allows intra-namespace traffic for multi-container labs
+*/}}
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lab-{{ .Values.student.id }}-{{ .Values.student.labId }}-netpol
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: cyber-range-lab
+    edefence.tech/type: cyber-range
+    edefence.tech/student-id: {{ .Values.student.id | quote }}
+    {{- with .Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  podSelector:
+    matchLabels:
+      edefence.tech/student-id: {{ .Values.student.id | quote }}
+      edefence.tech/lab-id: {{ .Values.student.labId | quote }}
+
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # --------------------------------------------------------------------------
+  # Ingress rules — who can connect INTO the lab pod
+  # --------------------------------------------------------------------------
+  ingress:
+    # Allow traffic from guacd daemon (any namespace with guacd label)
+    {{- if .Values.networkPolicy.allowGuacdEgress }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              edefence.tech/component: guacd
+        - podSelector:
+            matchLabels:
+              app: guacd
+      ports:
+        - port: {{ .Values.guacamole.port }}
+          protocol: TCP
+        {{- if eq .Values.guacamole.protocol "rdp" }}
+        - port: 3389
+          protocol: TCP
+        {{- end }}
+        {{- if eq .Values.guacamole.protocol "vnc" }}
+        - port: 5900
+          protocol: TCP
+        {{- end }}
+    {{- end }}
+    # Allow intra-namespace traffic (for multi-container labs: attacker + victim)
+    {{- if .Values.networkPolicy.allowIntraNamespace }}
+    - from:
+        - podSelector: {}
+    {{- end }}
+
+  # --------------------------------------------------------------------------
+  # Egress rules — what the lab pod can reach
+  # --------------------------------------------------------------------------
+  egress:
+    # Allow intra-namespace communication (victim/target machines within the lab)
+    {{- if .Values.networkPolicy.allowIntraNamespace }}
+    - to:
+        - podSelector: {}
+    {{- end }}
+
+    # Allow egress to guacd pod (in the main cyberacademy namespace)
+    {{- if .Values.networkPolicy.allowGuacdEgress }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              edefence.tech/component: guacd
+        - podSelector:
+            matchLabels:
+              app: guacd
+      ports:
+        - port: 4822
+          protocol: TCP
+    {{- end }}
+
+    # Allow DNS resolution (kube-dns)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+        - podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+
+    # NOTE: internet egress is DENIED (no allowEgressToInternet rule)
+    # Students cannot reach external IPs from inside the lab
+{{- end }}

@@ -1,0 +1,174 @@
+# =============================================================================
+# Cyber Academy E-DEFENCE — Lab Definition
+# Certification: WASO — Web Application Security Offensive
+# Lab ID: waso-lab-01-sqli
+# =============================================================================
+
+apiVersion: edefence.tech/v1
+kind: CyberLab
+metadata:
+  name: waso-lab-01-sqli
+  namespace: cyber-range-labs
+  labels:
+    edefence.tech/certification: waso
+    edefence.tech/lab-number: "01"
+    edefence.tech/difficulty: beginner-to-intermediate
+    edefence.tech/type: offensive-web
+
+spec:
+  # ---------------------------------------------------------------------------
+  # Lab metadata
+  # ---------------------------------------------------------------------------
+  title: "Injection SQL sur application bancaire vulnérable — BanqueVulnUEMOA"
+  titleFr: "Injection SQL sur app bancaire vulnérable"
+  description: >
+    Exploiter des vulnérabilités d'injection SQL sur une application bancaire
+    fictive (BanqueVulnUEMOA) inspirée d'un portail de banque en ligne UEMOA.
+    L'étudiant progressera de l'erreur-based SQLi à la blind SQLi, extraira
+    la base de données clients et démontrera l'impact métier, avant de
+    documenter les corrections à apporter.
+  duration: 120
+  maxAttempts: 3
+  passingScore: 70
+
+  # ---------------------------------------------------------------------------
+  # Docker image
+  # ---------------------------------------------------------------------------
+  image:
+    repository: edefence/waso-sqli-lab
+    tag: "1.0.0"
+    fallback: "kalilinux/kali-rolling:latest"
+    pullPolicy: IfNotPresent
+
+  # ---------------------------------------------------------------------------
+  # Pre-installed tools
+  # ---------------------------------------------------------------------------
+  tools:
+    - name: sqlmap
+      version: "1.7"
+      install: apt
+    - name: Burp Suite Community
+      version: "2024.x"
+      install: manual
+    - name: curl
+      version: latest
+      install: apt
+    - name: ffuf
+      version: latest
+      install: apt
+    - name: Firefox ESR
+      version: latest
+      install: apt
+
+  # ---------------------------------------------------------------------------
+  # Learning objectives
+  # ---------------------------------------------------------------------------
+  objectives:
+    - id: obj-01
+      title: "Identifier les points d'injection SQL manuellement"
+      description: >
+        Recenser les paramètres vulnérables dans l'application BanqueVulnUEMOA
+        (login, recherche de compte, historique) sans outils automatisés.
+        Documenter les payloads testés et les comportements observés.
+      points: 20
+
+    - id: obj-02
+      title: "Exploiter une injection SQL error-based"
+      description: >
+        Utiliser les messages d'erreur SQL pour énumérer la base de données :
+        version SGBD, schéma, tables, colonnes. Extraire la liste des comptes
+        utilisateurs et leurs hashs de mot de passe.
+      points: 25
+
+    - id: obj-03
+      title: "Réaliser une blind SQLi (boolean-based)"
+      description: >
+        Sur un endpoint sans message d'erreur, utiliser sqlmap en mode
+        blind boolean pour exfiltrer les données de la table transactions.
+        Extraire le solde du compte cible.
+      points: 30
+
+    - id: obj-04
+      title: "Documenter et corriger les vulnérabilités"
+      description: >
+        Rédiger un rapport de pentest incluant : CVSS score, preuve de concept,
+        impact métier UEMOA (RGPD-équivalent, données financières sensibles)
+        et recommandations de remédiation (requêtes préparées, WAF, WAF bypass).
+      points: 25
+
+  # ---------------------------------------------------------------------------
+  # CTF Flags
+  # ---------------------------------------------------------------------------
+  flags:
+    - id: flag-01
+      hint: "Extrayez la version du SGBD via injection error-based"
+      flag: "EDEFENCE{mysql_version_8_0_35}"
+      points: 10
+
+    - id: flag-02
+      hint: "Hash MD5 du mot de passe admin — table users"
+      flag: "EDEFENCE{admin_hash_5f4dcc3b5aa765d61d8327deb882cf99}"
+      points: 20
+
+    - id: flag-03
+      hint: "Solde du compte VIP via blind SQLi — table accounts"
+      flag: "EDEFENCE{vip_balance_4750000_xof}"
+      points: 25
+
+    - id: flag-04
+      hint: "Nom complet du DG de la banque fictive — table executives"
+      flag: "EDEFENCE{dg_name_ibrahim_koita}"
+      points: 20
+
+  # ---------------------------------------------------------------------------
+  # Target application
+  # ---------------------------------------------------------------------------
+  targetApp:
+    name: BanqueVulnUEMOA
+    image: edefence/banque-vuln-uemoa:1.0.0
+    framework: PHP/MySQL
+    vulnerabilities:
+      - type: SQLi
+        cwe: CWE-89
+        severity: CRITICAL
+      - type: Authentication Bypass
+        cwe: CWE-287
+        severity: HIGH
+      - type: Information Disclosure
+        cwe: CWE-200
+        severity: MEDIUM
+
+  # ---------------------------------------------------------------------------
+  # Network configuration
+  # ---------------------------------------------------------------------------
+  network:
+    isolated: true
+    allowInternetEgress: false
+    internalSubnet: "10.20.3.0/24"
+    targetHost:
+      name: "banque-vuln-uemoa"
+      image: "edefence/banque-vuln-uemoa:1.0.0"
+      ip: "10.20.3.10"
+      ports:
+        - 80
+        - 3306
+
+  # ---------------------------------------------------------------------------
+  # Resources
+  # ---------------------------------------------------------------------------
+  resources:
+    limits:
+      cpu: "2"
+      memory: "3Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+  # ---------------------------------------------------------------------------
+  # Guacamole access
+  # ---------------------------------------------------------------------------
+  access:
+    protocol: ssh
+    port: 22
+    guiProtocol: vnc
+    vncPort: 5900

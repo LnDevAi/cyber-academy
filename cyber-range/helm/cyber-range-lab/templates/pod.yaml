@@ -1,0 +1,169 @@
+{{/*
+  Lab Pod — isolated Kali Linux environment for the student.
+  Exposes SSH (and optionally RDP/VNC) for Guacamole connection.
+*/}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: lab-{{ .Values.student.id }}-{{ .Values.student.labId }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: cyber-range-lab
+    edefence.tech/type: cyber-range
+    edefence.tech/student-id: {{ .Values.student.id | quote }}
+    edefence.tech/lab-id: {{ .Values.student.labId | quote }}
+    edefence.tech/course-code: {{ .Values.student.courseCode | quote }}
+    edefence.tech/protocol: {{ .Values.guacamole.protocol | quote }}
+    {{- with .Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    edefence.tech/started-at: {{ now | date "2006-01-02T15:04:05Z" | quote }}
+    edefence.tech/max-duration: {{ .Values.lifespan.maxDurationSeconds | quote }}
+spec:
+  restartPolicy: Always
+
+  # Security context at Pod level
+  securityContext:
+    runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+    {{- if not .Values.securityContext.runAsNonRoot }}
+    runAsUser: 0
+    {{- end }}
+    fsGroup: 1000
+
+  # Node scheduling
+  {{- with .Values.nodeSelector }}
+  nodeSelector:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.tolerations }}
+  tolerations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.affinity }}
+  affinity:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  # Init container: install OpenSSH server if not present in the image
+  initContainers:
+    - name: setup-ssh
+      image: {{ .Values.labImage }}
+      imagePullPolicy: {{ .Values.imagePullPolicy }}
+      command:
+        - /bin/bash
+        - -c
+        - |
+          apt-get update -qq && apt-get install -y -qq openssh-server sudo curl wget net-tools iputils-ping nmap 2>/dev/null || true
+          mkdir -p /var/run/sshd
+          echo "root:{{ .Values.guacamole.password }}" | chpasswd 2>/dev/null || true
+          useradd -m -s /bin/bash {{ .Values.guacamole.username }} 2>/dev/null || true
+          echo "{{ .Values.guacamole.username }}:{{ .Values.guacamole.password }}" | chpasswd
+          echo "{{ .Values.guacamole.username }} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+          sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config 2>/dev/null || true
+          sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config 2>/dev/null || true
+          cp -rp /etc/ssh /mnt/ssh-config/
+          cp -rp /home /mnt/home-dir/ 2>/dev/null || true
+      volumeMounts:
+        - name: ssh-config
+          mountPath: /mnt/ssh-config
+        - name: home-dir
+          mountPath: /mnt/home-dir
+      resources:
+        limits:
+          cpu: "500m"
+          memory: "512Mi"
+
+  containers:
+    # -------------------------------------------------------------------------
+    # Main Lab Container — Kali Linux + SSH
+    # -------------------------------------------------------------------------
+    - name: lab
+      image: {{ .Values.labImage }}
+      imagePullPolicy: {{ .Values.imagePullPolicy }}
+
+      command:
+        - /bin/bash
+        - -c
+        - |
+          # Restore SSH config
+          cp -rp /mnt/ssh-config/* /etc/ssh/ 2>/dev/null || true
+          # Start SSH daemon
+          /usr/sbin/sshd -D &
+          # Keep container alive
+          tail -f /dev/null
+
+      ports:
+        - name: ssh
+          containerPort: {{ .Values.guacamole.port }}
+          protocol: TCP
+        {{- if eq .Values.guacamole.protocol "rdp" }}
+        - name: rdp
+          containerPort: 3389
+          protocol: TCP
+        {{- end }}
+        {{- if eq .Values.guacamole.protocol "vnc" }}
+        - name: vnc
+          containerPort: 5900
+          protocol: TCP
+        {{- end }}
+
+      resources:
+        {{- toYaml .Values.resources | nindent 8 }}
+
+      securityContext:
+        allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+        readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem }}
+        capabilities:
+          drop:
+            {{- toYaml .Values.securityContext.capabilities.drop | nindent 12 }}
+          {{- if .Values.securityContext.capabilities.add }}
+          add:
+            {{- toYaml .Values.securityContext.capabilities.add | nindent 12 }}
+          {{- end }}
+
+      volumeMounts:
+        - name: ssh-config
+          mountPath: /etc/ssh
+        - name: home-dir
+          mountPath: /home
+        {{- if .Values.persistence.enabled }}
+        - name: student-workspace
+          mountPath: /workspace
+        {{- end }}
+
+      env:
+        - name: STUDENT_ID
+          value: {{ .Values.student.id | quote }}
+        - name: LAB_ID
+          value: {{ .Values.student.labId | quote }}
+        - name: COURSE_CODE
+          value: {{ .Values.student.courseCode | quote }}
+        {{- with .Values.extraEnv }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+
+      livenessProbe:
+        tcpSocket:
+          port: {{ .Values.guacamole.port }}
+        initialDelaySeconds: 30
+        periodSeconds: 30
+        failureThreshold: 5
+
+      readinessProbe:
+        tcpSocket:
+          port: {{ .Values.guacamole.port }}
+        initialDelaySeconds: 15
+        periodSeconds: 10
+        failureThreshold: 3
+
+  volumes:
+    - name: ssh-config
+      emptyDir: {}
+    - name: home-dir
+      emptyDir: {}
+    {{- if .Values.persistence.enabled }}
+    - name: student-workspace
+      persistentVolumeClaim:
+        claimName: lab-{{ .Values.student.id }}-{{ .Values.student.labId }}-pvc
+    {{- end }}

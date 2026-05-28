@@ -1,0 +1,40 @@
+{{/*
+  ClusterIP Service — exposes the lab pod's SSH/RDP/VNC port to guacd
+  within the cluster. Not exposed externally; Guacamole handles access.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: lab-{{ .Values.student.id }}-{{ .Values.student.labId }}-svc
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: cyber-range-lab
+    edefence.tech/type: cyber-range
+    edefence.tech/student-id: {{ .Values.student.id | quote }}
+    edefence.tech/lab-id: {{ .Values.student.labId | quote }}
+    {{- with .Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  type: ClusterIP
+  selector:
+    app: cyber-range-lab
+    edefence.tech/student-id: {{ .Values.student.id | quote }}
+    edefence.tech/lab-id: {{ .Values.student.labId | quote }}
+  ports:
+    - name: {{ .Values.guacamole.protocol }}
+      port: {{ .Values.guacamole.port }}
+      targetPort: {{ .Values.guacamole.port }}
+      protocol: TCP
+    {{- if eq .Values.guacamole.protocol "rdp" }}
+    - name: rdp
+      port: 3389
+      targetPort: 3389
+      protocol: TCP
+    {{- end }}
+    {{- if eq .Values.guacamole.protocol "vnc" }}
+    - name: vnc
+      port: 5900
+      targetPort: 5900
+      protocol: TCP
+    {{- end }}
