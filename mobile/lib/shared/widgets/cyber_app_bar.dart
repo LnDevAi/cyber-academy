@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../lib/core/theme.dart';
+import '../../core/theme.dart';
 
 class CyberAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
