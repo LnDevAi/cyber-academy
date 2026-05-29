@@ -48,12 +48,9 @@ if [ ! -f .env ]; then
   exit 0
 fi
 
-# Valider les vars critiques
-set +u
-source .env
-set -u
+# Valider les vars critiques (sans source pour éviter les erreurs de syntaxe .env)
 for var in DB_PASSWORD REDIS_PASSWORD MINIO_SECRET_KEY MOODLE_ADMIN_PASSWORD SECRET_KEY; do
-  val="${!var:-}"
+  val=$(grep -E "^${var}=" .env | head -1 | cut -d= -f2-)
   [[ -z "$val" ]] && err "Variable $var non définie dans .env — édite $APP_DIR/.env"
 done
 
@@ -77,7 +74,8 @@ log "Génération du schéma Guacamole..."
   warn "Schéma Guacamole déjà présent."
 
 # 5. Dossier ChromaDB
-mkdir -p "${CHROMADB_PERSIST_PATH:-/opt/cyberacademy/chromadb}"
+CHROMADB_PATH=$(grep -E "^CHROMADB_PERSIST_PATH=" .env | head -1 | cut -d= -f2-)
+mkdir -p "${CHROMADB_PATH:-/opt/cyberacademy/chromadb}"
 
 # 6. Build + démarrage
 log "Build et démarrage des services (10-20 min)..."

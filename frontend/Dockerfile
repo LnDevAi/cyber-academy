@@ -20,11 +20,7 @@ RUN flutter pub get
 COPY . .
 
 # Build Flutter Web with CanvasKit renderer (production-quality graphics)
-RUN flutter build web \
-    --release \
-    --web-renderer canvaskit \
-    --dart-define=FLUTTER_WEB_CANVASKIT_URL=https://unpkg.com/canvaskit-wasm@latest/bin/ \
-    --no-tree-shake-icons
+RUN flutter build web --release --no-tree-shake-icons
 
 # -----------------------------------------------------------------------------
 # Stage 2: Final — Serve with Nginx Alpine
