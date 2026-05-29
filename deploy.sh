@@ -24,18 +24,37 @@ cd "$APP_DIR"
 
 # 2. Fichier .env
 if [ ! -f .env ]; then
-  [ -f .env.example ] && cp .env.example .env || touch .env
-  warn "Configurer $APP_DIR/.env avant de continuer."
-  echo "Variables requises : DB_PASSWORD, REDIS_PASSWORD, MINIO_SECRET_KEY, MOODLE_ADMIN_PASSWORD, SECRET_KEY"
-  read -rp "Appuyer sur Entrée pour ouvrir nano, ou Ctrl+C pour éditer manuellement : "
-  nano .env
+  if [ -f .env.example ]; then
+    cp .env.example .env
+    warn ".env créé depuis .env.example"
+  else
+    touch .env
+  fi
+  echo ""
+  echo "================================================================"
+  echo "  CONFIGURATION REQUISE"
+  echo "  Editez le fichier $APP_DIR/.env avec vos secrets :"
+  echo "    nano $APP_DIR/.env"
+  echo ""
+  echo "  Variables requises :"
+  echo "    DB_PASSWORD           mot de passe PostgreSQL"
+  echo "    REDIS_PASSWORD        mot de passe Redis"
+  echo "    MINIO_SECRET_KEY      clé secrète MinIO"
+  echo "    MOODLE_ADMIN_PASSWORD mot de passe admin Moodle"
+  echo "    SECRET_KEY            clé JWT/app (openssl rand -hex 32)"
+  echo ""
+  echo "  Puis relancez : bash $APP_DIR/deploy.sh"
+  echo "================================================================"
+  exit 0
 fi
 
 # Valider les vars critiques
+set +u
 source .env
+set -u
 for var in DB_PASSWORD REDIS_PASSWORD MINIO_SECRET_KEY MOODLE_ADMIN_PASSWORD SECRET_KEY; do
   val="${!var:-}"
-  [[ -z "$val" ]] && err "Variable $var non définie dans .env"
+  [[ -z "$val" ]] && err "Variable $var non définie dans .env — édite $APP_DIR/.env"
 done
 
 # 3. Vérifier le réseau proxy
@@ -54,7 +73,7 @@ log "Génération du schéma Guacamole..."
 /usr/bin/docker run --rm guacamole/guacamole:latest \
   /opt/guacamole/bin/initdb.sh --postgresql > /tmp/guacamole-initdb.sql
 /usr/bin/docker compose -f docker-compose.prod.yml exec -T db \
-  psql -U cyberacademy -d guacamole_db -f /tmp/guacamole-initdb.sql 2>/dev/null || \
+  psql -U cyberacademy -d guacamole_db < /tmp/guacamole-initdb.sql 2>/dev/null || \
   warn "Schéma Guacamole déjà présent."
 
 # 5. Dossier ChromaDB
