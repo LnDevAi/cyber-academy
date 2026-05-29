@@ -101,7 +101,7 @@ services:
   # Moodle 4.x LMS
   # ---------------------------------------------------------------------------
   moodle:
-    image: bitnami/moodle:4
+    image: bitnami/moodle:latest
     container_name: cyberacademy_moodle
     restart: always
     depends_on:
