@@ -160,12 +160,12 @@ class _TARGUIPageState extends ConsumerState<TARGUIPage> {
                               ),
                               title: Text(
                                 session.titre,
+                                overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: isActive
                                       ? FontWeight.w600
                                       : FontWeight.w400,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               subtitle: Text(

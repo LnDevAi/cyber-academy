@@ -236,19 +236,19 @@ class CyberSidebar extends ConsumerWidget {
                         children: [
                           Text(
                             user?.prenom ?? 'Utilisateur',
+                            overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Text(
                             user?.profil ?? '',
+                            overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
                               color: AppColors.textMuted,
                               fontSize: 11,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
