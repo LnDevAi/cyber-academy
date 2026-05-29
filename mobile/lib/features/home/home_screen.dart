@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import '../../core/theme.dart';
+import '../../core/l10n/language_provider.dart';
 import '../auth/auth_provider.dart';
 import '../courses/courses_provider.dart';
 import '../labs/labs_provider.dart';
@@ -32,6 +33,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(translationsProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(
@@ -52,31 +54,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           selectedLabelStyle: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600),
           unselectedLabelStyle: GoogleFonts.inter(fontSize: 11),
           elevation: 0,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'Accueil',
+              icon: const Icon(Icons.home_outlined),
+              activeIcon: const Icon(Icons.home_rounded),
+              label: s.navHome,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.school_outlined),
-              activeIcon: Icon(Icons.school_rounded),
-              label: 'Cours',
+              icon: const Icon(Icons.school_outlined),
+              activeIcon: const Icon(Icons.school_rounded),
+              label: s.navCourses,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.terminal_outlined),
-              activeIcon: Icon(Icons.terminal_rounded),
-              label: 'Labs',
+              icon: const Icon(Icons.terminal_outlined),
+              activeIcon: const Icon(Icons.terminal_rounded),
+              label: s.navLabs,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.workspace_premium_outlined),
-              activeIcon: Icon(Icons.workspace_premium_rounded),
-              label: 'Certifs',
+              icon: const Icon(Icons.workspace_premium_outlined),
+              activeIcon: const Icon(Icons.workspace_premium_rounded),
+              label: s.navCertifs,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline_rounded),
-              activeIcon: Icon(Icons.person_rounded),
-              label: 'Profil',
+              icon: const Icon(Icons.person_outline_rounded),
+              activeIcon: const Icon(Icons.person_rounded),
+              label: s.navProfile,
             ),
           ],
         ),
