@@ -19,7 +19,10 @@ RUN flutter pub get
 # Copy full source
 COPY . .
 
-# Build Flutter Web with CanvasKit renderer (production-quality graphics)
+# Generate Riverpod/JSON code (*.g.dart)
+RUN dart run build_runner build --delete-conflicting-outputs
+
+# Build Flutter Web
 RUN flutter build web --release --no-tree-shake-icons
 
 # -----------------------------------------------------------------------------

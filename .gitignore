@@ -43,6 +43,7 @@ develop-eggs/
 .installed.cfg
 lib/
 lib64/
+!frontend/lib/
 .python-version
 
 # Virtual environments
@@ -95,9 +96,10 @@ build/
 .pub-cache/
 .pub/
 
-# Flutter web build artifacts
-web/
+# Flutter web build artifacts (build output only)
+build/web/
 *.js.map
+!frontend/web/
 
 # Dart generated files
 *.g.dart
