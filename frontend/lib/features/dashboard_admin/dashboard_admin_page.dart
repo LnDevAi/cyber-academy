@@ -152,7 +152,7 @@ class _DashboardAdminPageState extends ConsumerState<DashboardAdminPage>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
-                      _AperçuTab(statsAsync: statsAsync),
+                      _ApercuTab(statsAsync: statsAsync),
                       _UtilisateursTab(search: _userSearch, searchCtrl: _userSearchCtrl, onSearch: (v) => setState(() => _userSearch = v)),
                       _PaiementsTab(),
                       _CatalogueTab(),
@@ -170,9 +170,9 @@ class _DashboardAdminPageState extends ConsumerState<DashboardAdminPage>
   }
 }
 
-class _AperçuTab extends StatelessWidget {
+class _ApercuTab extends StatelessWidget {
   final AsyncValue<AdminStats> statsAsync;
-  const _AperçuTab({required this.statsAsync});
+  const _ApercuTab({required this.statsAsync});
 
   @override
   Widget build(BuildContext context) {
