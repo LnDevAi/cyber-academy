@@ -98,51 +98,13 @@ services:
         max-file: "3"
 
   # ---------------------------------------------------------------------------
-  # Moodle 4.x LMS
+  # Moodle 4.x LMS — désactivé temporairement (image Bitnami indisponible)
+  # Réactiver avec : docker pull moodlehq/moodle-php-apache:8.2 (image alternative)
   # ---------------------------------------------------------------------------
-  moodle:
-    image: registry.bitnami.com/bitnami/moodle:4
-    container_name: cyberacademy_moodle
-    restart: always
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    environment:
-      MOODLE_DATABASE_TYPE: pgsql
-      MOODLE_DATABASE_HOST: db
-      MOODLE_DATABASE_PORT_NUMBER: 5432
-      MOODLE_DATABASE_NAME: moodle
-      MOODLE_DATABASE_USER: cyberacademy
-      MOODLE_DATABASE_PASSWORD: ${DB_PASSWORD}
-      MOODLE_USERNAME: admin
-      MOODLE_PASSWORD: ${MOODLE_ADMIN_PASSWORD}
-      MOODLE_EMAIL: admin@edefence.tech
-      MOODLE_SITE_NAME: "Cyber Academy E-DEFENCE"
-      MOODLE_SKIP_BOOTSTRAP: "no"
-      BITNAMI_DEBUG: "false"
-      PHP_MEMORY_LIMIT: "512M"
-      PHP_MAX_UPLOAD_SIZE: "200M"
-      PHP_POST_MAX_SIZE: "200M"
-    volumes:
-      - moodle_data:/bitnami/moodle
-      - ./moodle/plugins:/bitnami/moodledata/plugins
-    expose:
-      - "8080"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/login/index.php"]
-      interval: 60s
-      timeout: 15s
-      retries: 10
-      start_period: 120s
-    networks:
-      - academy_internal
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "20m"
-        max-file: "5"
+  # moodle:
+  #   image: registry.bitnami.com/bitnami/moodle:4
+  #   container_name: cyberacademy_moodle
+  #   ... (voir git history)
 
   # ---------------------------------------------------------------------------
   # Guacamole Daemon (guacd)
@@ -364,8 +326,7 @@ volumes:
     driver: local
   minio_data:
     driver: local
-  moodle_data:
-    driver: local
+  # moodle_data: désactivé (service Moodle commenté)
   guacd_drive:
     driver: local
   guacd_record:
