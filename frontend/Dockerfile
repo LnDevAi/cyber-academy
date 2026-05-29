@@ -11,7 +11,7 @@ FROM ghcr.io/cirruslabs/flutter:stable AS builder
 WORKDIR /app
 
 # Copy dependency manifest first for layer caching
-COPY pubspec.yaml pubspec.lock ./
+COPY pubspec.yaml pubspec.lock* ./
 
 # Fetch dependencies
 RUN flutter pub get
