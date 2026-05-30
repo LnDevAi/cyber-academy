@@ -279,7 +279,7 @@ services:
     command: >
       celery -A app.tasks.celery_app beat
       -l info
-      --scheduler celery.schedulers:DatabaseScheduler
+      -s /app/celerybeat-schedule
     networks:
       - academy_internal
     logging:
