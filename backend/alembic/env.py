@@ -32,8 +32,8 @@ if config.config_file_name is not None:
 # Use the sync URL for Alembic migrations
 target_metadata = Base.metadata
 
-# Override sqlalchemy.url from settings
-config.set_main_option("sqlalchemy.url", settings.DATABASE_SYNC_URL)
+# Override sqlalchemy.url from settings (asyncpg required for async engine)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 
 def run_migrations_offline() -> None:
