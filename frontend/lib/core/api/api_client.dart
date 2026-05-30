@@ -1,8 +1,19 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String kBaseUrl = 'http://localhost:8000/api/v1';
+String get kBaseUrl {
+  if (kIsWeb) {
+    final uri = Uri.base;
+    final port = (uri.port == 80 || uri.port == 443 || uri.port == 0)
+        ? ''
+        : ':${uri.port}';
+    return '${uri.scheme}://${uri.host}$port/api/v1';
+  }
+  return 'http://localhost:8000/api/v1';
+}
+
 const String kTokenKey = 'auth_token';
 const String kRefreshTokenKey = 'refresh_token';
 
