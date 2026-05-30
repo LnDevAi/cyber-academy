@@ -66,7 +66,7 @@ def upgrade() -> None:
         sa.Column("country", sa.String(3), nullable=False, server_default="BF"),
         sa.Column(
             "plan",
-            sa.Enum("STARTER", "PRO", "ENTERPRISE", name="companyplan", schema="cyber_academy", create_type=False),
+            postgresql.ENUM("STARTER", "PRO", "ENTERPRISE", name="companyplan", schema="cyber_academy", create_type=False),
             nullable=False,
             server_default="STARTER",
         ),
@@ -89,7 +89,7 @@ def upgrade() -> None:
         sa.Column("country", sa.String(3), nullable=False, server_default="BF"),
         sa.Column(
             "role",
-            sa.Enum("STUDENT", "MENTOR", "ADMIN", "B2B_ADMIN", name="userrole", schema="cyber_academy", create_type=False),
+            postgresql.ENUM("STUDENT", "MENTOR", "ADMIN", "B2B_ADMIN", name="userrole", schema="cyber_academy", create_type=False),
             nullable=False,
             server_default="STUDENT",
         ),
@@ -121,18 +121,18 @@ def upgrade() -> None:
         sa.Column("short_description", sa.String(500), nullable=True),
         sa.Column(
             "type",
-            sa.Enum("ECERT", "INTERNATIONAL", name="coursetype", schema="cyber_academy", create_type=False),
+            postgresql.ENUM("ECERT", "INTERNATIONAL", name="coursetype", schema="cyber_academy", create_type=False),
             nullable=False,
         ),
         sa.Column(
             "partner",
-            sa.Enum("EDEFENCE", "PECB", "CISCO", "FORTINET", "EC_COUNCIL", "ISC2", "COMPTIA",
+            postgresql.ENUM("EDEFENCE", "PECB", "CISCO", "FORTINET", "EC_COUNCIL", "ISC2", "COMPTIA",
                     name="coursepartner", schema="cyber_academy", create_type=False),
             nullable=False,
         ),
         sa.Column(
             "level",
-            sa.Enum("BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT", name="courselevel", schema="cyber_academy", create_type=False),
+            postgresql.ENUM("BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT", name="courselevel", schema="cyber_academy", create_type=False),
             nullable=False,
         ),
         sa.Column("hours_total", sa.Integer(), nullable=False),
@@ -189,7 +189,7 @@ def upgrade() -> None:
         ),
         sa.Column(
             "status",
-            sa.Enum("PENDING_PAYMENT", "ACTIVE", "COMPLETED", "EXPIRED", "REFUNDED",
+            postgresql.ENUM("PENDING_PAYMENT", "ACTIVE", "COMPLETED", "EXPIRED", "REFUNDED",
                     name="enrollmentstatus", schema="cyber_academy", create_type=False),
             nullable=False,
             server_default="PENDING_PAYMENT",
@@ -226,20 +226,20 @@ def upgrade() -> None:
         sa.Column("amount_fcfa", sa.Integer(), nullable=False),
         sa.Column(
             "currency",
-            sa.Enum("XOF", "EUR", "USD", name="paymentcurrency", schema="cyber_academy", create_type=False),
+            postgresql.ENUM("XOF", "EUR", "USD", name="paymentcurrency", schema="cyber_academy", create_type=False),
             nullable=False,
             server_default="XOF",
         ),
         sa.Column(
             "method",
-            sa.Enum("ORANGE_MONEY", "MOOV_MONEY", "WAVE", "CARD_STRIPE", "BANK_TRANSFER",
+            postgresql.ENUM("ORANGE_MONEY", "MOOV_MONEY", "WAVE", "CARD_STRIPE", "BANK_TRANSFER",
                     name="paymentmethod", schema="cyber_academy", create_type=False),
             nullable=False,
         ),
         sa.Column("provider_ref", sa.String(255), nullable=True),
         sa.Column(
             "status",
-            sa.Enum("PENDING", "CONFIRMED", "FAILED", "REFUNDED",
+            postgresql.ENUM("PENDING", "CONFIRMED", "FAILED", "REFUNDED",
                     name="paymentstatus", schema="cyber_academy", create_type=False),
             nullable=False,
             server_default="PENDING",
@@ -311,7 +311,7 @@ def upgrade() -> None:
         sa.Column("guacamole_url", sa.String(2000), nullable=True),
         sa.Column(
             "status",
-            sa.Enum("PROVISIONING", "ACTIVE", "SUSPENDED", "TERMINATED",
+            postgresql.ENUM("PROVISIONING", "ACTIVE", "SUSPENDED", "TERMINATED",
                     name="cyberrangestatus", schema="cyber_academy", create_type=False),
             nullable=False,
             server_default="PROVISIONING",
@@ -355,7 +355,7 @@ def upgrade() -> None:
         sa.Column("duration_minutes", sa.Integer(), nullable=False, server_default="60"),
         sa.Column(
             "status",
-            sa.Enum("SCHEDULED", "COMPLETED", "CANCELLED",
+            postgresql.ENUM("SCHEDULED", "COMPLETED", "CANCELLED",
                     name="mentorsessionstatus", schema="cyber_academy", create_type=False),
             nullable=False,
             server_default="SCHEDULED",
