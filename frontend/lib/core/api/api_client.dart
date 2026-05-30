@@ -5,11 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 String get kBaseUrl {
   if (kIsWeb) {
-    final uri = Uri.base;
-    final port = (uri.port == 80 || uri.port == 443 || uri.port == 0)
-        ? ''
-        : ':${uri.port}';
-    return '${uri.scheme}://${uri.host}$port/api/v1';
+    final host = Uri.base.host;
+    if (host == 'localhost' || host == '127.0.0.1') {
+      return 'http://$host:${Uri.base.port}/api/v1';
+    }
+    return 'https://$host/api/v1';
   }
   return 'http://localhost:8000/api/v1';
 }
