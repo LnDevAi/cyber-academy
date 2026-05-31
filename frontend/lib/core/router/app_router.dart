@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_client.dart';
-import '../../features/auth/auth_provider.dart';
 import '../../features/auth/login_page.dart';
 import '../../features/auth/register_page.dart';
 import '../../features/auth/two_factor_setup_page.dart';
@@ -23,15 +22,13 @@ import '../../features/dashboard_admin/dashboard_admin_page.dart';
 import '../../features/dashboard_b2b/dashboard_b2b_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
-
   return GoRouter(
     initialLocation: '/vitrine',
     debugLogDiagnostics: false,
     redirect: (context, state) async {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(kTokenKey);
-      final isLoggedIn = token != null && authState.isAuthenticated;
+      final isLoggedIn = token != null;
       final isLoggingIn = state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
       final isPublic = state.matchedLocation == '/vitrine' ||
