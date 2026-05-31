@@ -1,0 +1,57 @@
+# =============================================================================
+# Cyber Academy E-DEFENCE Backend — .dockerignore
+# IMPORTANT : alembic/versions/ doit être INCLUS dans l'image pour les migrations
+# =============================================================================
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables (secrets — ne jamais inclure dans l'image)
+.env
+.env.*
+!.env.example
+
+# Development tools
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Tests (pas nécessaires en prod)
+tests/
+
+# IDE configs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Celery beat schedule (géré par volume en prod)
+celerybeat-schedule
+celerybeat.pid
+
+# Logs
+*.log
+logs/
+
+# Git
+.git/
+.gitignore
