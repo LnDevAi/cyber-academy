@@ -197,6 +197,8 @@ services:
       --port 8000
       --reload
       --log-level info
+      --proxy-headers
+      --forwarded-allow-ips='*'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
