@@ -3,17 +3,31 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 from app.models.user import UserRole
 
 
 class UserCreate(BaseModel):
+    """Accepts Flutter field names (nom_complet, telephone) as well as canonical ones."""
+
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
-    full_name: str = Field(min_length=2, max_length=255)
+    full_name: Optional[str] = Field(default=None, min_length=2, max_length=255)
+    nom_complet: Optional[str] = Field(default=None, max_length=255)   # Flutter alias
     phone: Optional[str] = Field(default=None, max_length=30)
+    telephone: Optional[str] = Field(default=None, max_length=30)     # Flutter alias
     country: str = Field(default="BF", max_length=3)
+
+    @model_validator(mode="after")
+    def resolve_flutter_fields(self) -> "UserCreate":
+        if not self.full_name and self.nom_complet:
+            self.full_name = self.nom_complet
+        if not self.phone and self.telephone:
+            self.phone = self.telephone
+        if not self.full_name:
+            raise ValueError("full_name (ou nom_complet) est requis")
+        return self
 
     @field_validator("password")
     @classmethod

@@ -70,7 +70,7 @@ E-DEFENCE | PECB | Cisco | Fortinet | EC-Council
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
     lifespan=lifespan,
-    redirect_slashes=False,
+    redirect_slashes=True,
 )
 
 # ── CORS Middleware ──────────────────────────────────────────────────────────
