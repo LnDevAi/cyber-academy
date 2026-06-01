@@ -246,6 +246,7 @@ services:
       --concurrency=4
     networks:
       - academy_internal
+      - cyberacademy_net
     logging:
       driver: "json-file"
       options:
@@ -342,6 +343,9 @@ networks:
   edefence_net:
     external: true
     name: edefence_net
+  cyberacademy_net:
+    external: true
+    name: cyberacademy_net
   academy_internal:
     driver: bridge
     name: academy_internal
